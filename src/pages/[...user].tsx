@@ -1,40 +1,45 @@
-import { useRouter } from 'next/router'
-import { Prisma, PrismaClient } from '@prisma/client'
-import { links, profiles } from '.prisma/client'
+import prisma from '@/util/Prisma'
+import { Profile, Link } from '.prisma/client'
 import { GetServerSideProps } from 'next'
 import { useSession } from 'next-auth/react'
 import { useEffect } from 'react'
+import LinkButton from '@/components/LinkButton'
+import ProfileName from '@/components/ProfileName'
 
 export const getServerSideProps: GetServerSideProps = async ({ query, req }) => {
   const userHandle = query.user as string
   
-  const prisma = new PrismaClient()
   const token = req.headers.AUTHORIZATION
+
   try {
-    const profile = await prisma.profiles.findFirstOrThrow({
+    // console.log(`User Handle: ${userHandle}`)
+    const profile = await prisma.profile.findFirstOrThrow({
       where: {
         handle: userHandle[0]
       }
     })
+    profile.created_at = null;
 
-    const links = await prisma.links.findMany({
+    const links = await prisma.link.findMany({
       where: {
-        owner_id: profile.id
+        profile_id: profile.id
       }
     })
 
+    // Ugly hack; Can't pass Date object over Server Side Props, set .created_at to null
     return { props: { profile, links } }
   } catch (error) {
-    return {
-      redirect: {
-        destination: '/',
-        permanent: false,
-      },
-    };
+    console.log(error)
   }
+  return {
+    redirect: {
+      destination: '/',
+      permanent: false,
+    },
+  };
 }
 
-export default function UserPage({ profile, links }: { profile: profiles, links: links[]}) {
+export default function UserPage({ profile, links }: { profile: Profile, links: Link[]}) {
   const { data: session } = useSession()
 
   useEffect(() => {
@@ -43,14 +48,10 @@ export default function UserPage({ profile, links }: { profile: profiles, links:
 
   return (
     <>
-      <h1>{profile.handle}</h1>
-      <h2>{profile.bio}</h2>
-      <div className="flex justify-center items-center flex-col gap-2">
-        {links.map((link) => {
-          return (<a href={link.url} key={link.id} className="px-4 py-3 rounded-full bg-gray-700 text-center w-full max-w-screen-sm">
-              {link.name}
-          </a>)
-        })}
+      <div className="flex justify-center items-center flex-col gap-4 p-10">
+        <ProfileName name={profile.handle}/>
+        <h2>{profile.bio}</h2>
+        {links.map((link) => <LinkButton key={link.id} data={link}/>)}
       </div>
     </>
   )
