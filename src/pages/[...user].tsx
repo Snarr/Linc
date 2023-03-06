@@ -45,11 +45,13 @@ export default function UserPage({ profile, links }: { profile: profiles, links:
     <>
       <h1>{profile.handle}</h1>
       <h2>{profile.bio}</h2>
-      <h3>{links.map((link) => {
-        return (<a href={link.url} key={link.id}>
-          {link.name}
-        </a>)
-      })}</h3>
+      <div className="flex justify-center items-center flex-col gap-2">
+        {links.map((link) => {
+          return (<a href={link.url} key={link.id} className="px-4 py-3 rounded-full bg-gray-700 text-center w-full max-w-screen-sm">
+              {link.name}
+          </a>)
+        })}
+      </div>
     </>
   )
 }
