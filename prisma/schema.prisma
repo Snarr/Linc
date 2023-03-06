@@ -3,20 +3,84 @@ generator client {
 }
 
 datasource db {
-  provider     = "mysql"
-  url          = env("DATABASE_URL")
-  relationMode = "prisma"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-model profiles {
-  id     Int     @id @default(autoincrement())
-  handle String  @db.VarChar(30)
-  bio    String? @db.VarChar(255)
+model Post {
+  id        String  @id @default(cuid())
+  title     String
+  content   String?
+  published Boolean @default(false)
+  authorId  String?
+  author    User?   @relation(fields: [authorId], references: [id])
 }
 
-model links {
-  id       Int    @id @default(autoincrement())
-  name     String @db.VarChar(255)
-  url      String @db.VarChar(255)
-  owner_id Int
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String  @map("user_id")
+  type               String
+  provider           String
+  providerAccountId  String  @map("provider_account_id")
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+  oauth_token_secret String?
+  oauth_token        String?
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  posts         Post[]
+  Profile       Profile[]
+  sessions      Session[]
+}
+
+model VerificationToken {
+  id         Int      @id @default(autoincrement())
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Profile {
+  id         Int       @id(map: "Profiles_pkey") @default(autoincrement())
+  user_id    String
+  handle     String    @unique(map: "Profiles_handle_key")
+  name       String?
+  bio        String?
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  Link       Link[]
+  User       User      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Link {
+  id         Int     @id(map: "Links_pkey") @default(autoincrement())
+  name       String
+  order      Int     @db.SmallInt
+  profile_id Int
+  url        String
+  Profile    Profile @relation(fields: [profile_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
