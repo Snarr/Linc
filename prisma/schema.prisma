@@ -13,3 +13,10 @@ model profiles {
   handle String  @db.VarChar(30)
   bio    String? @db.VarChar(255)
 }
+
+model links {
+  id       Int    @id @default(autoincrement())
+  name     String @db.VarChar(255)
+  url      String @db.VarChar(255)
+  owner_id Int
+}

@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router'
 import { Prisma, PrismaClient } from '@prisma/client'
+import { links, profiles } from '.prisma/client'
 import { GetServerSideProps } from 'next'
 import { useSession } from 'next-auth/react'
 import { useEffect } from 'react'
@@ -15,7 +16,14 @@ export const getServerSideProps: GetServerSideProps = async ({ query, req }) => 
         handle: userHandle[0]
       }
     })
-    return { props: { profile } }
+
+    const links = await prisma.links.findMany({
+      where: {
+        owner_id: profile.id
+      }
+    })
+
+    return { props: { profile, links } }
   } catch (error) {
     return {
       redirect: {
@@ -26,7 +34,7 @@ export const getServerSideProps: GetServerSideProps = async ({ query, req }) => 
   }
 }
 
-export default function UserPage({ profile }: { profile: Prisma.profilesSelect}) {
+export default function UserPage({ profile, links }: { profile: profiles, links: links[]}) {
   const { data: session } = useSession()
 
   useEffect(() => {
@@ -37,6 +45,11 @@ export default function UserPage({ profile }: { profile: Prisma.profilesSelect})
     <>
       <h1>{profile.handle}</h1>
       <h2>{profile.bio}</h2>
+      <h3>{links.map((link) => {
+        return (<a href={link.url} key={link.id}>
+          {link.name}
+        </a>)
+      })}</h3>
     </>
   )
 }
