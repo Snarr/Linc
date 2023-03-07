@@ -5,10 +5,10 @@ import { useSession } from 'next-auth/react'
 import { useEffect } from 'react'
 import LinkButton from '@/components/LinkButton'
 import ProfileName from '@/components/ProfileName'
+import BioTag from '@/components/BioTag'
 
 export const getServerSideProps: GetServerSideProps = async ({ query, req }) => {
   const userHandle = query.user as string
-  
   const token = req.headers.AUTHORIZATION
 
   try {
@@ -29,7 +29,7 @@ export const getServerSideProps: GetServerSideProps = async ({ query, req }) => 
     // Ugly hack; Can't pass Date object over Server Side Props, set .created_at to null
     return { props: { profile, links } }
   } catch (error) {
-    console.log(error)
+    // console.log(error)
   }
   return {
     redirect: {
@@ -48,9 +48,11 @@ export default function UserPage({ profile, links }: { profile: Profile, links: 
 
   return (
     <>
-      <div className="flex justify-center items-center flex-col gap-4 p-10">
-        <ProfileName name={profile.handle}/>
-        <h2>{profile.bio}</h2>
+      <div className="flex justify-center items-center flex-col gap-5 p-5 h-full max-w-screen-sm w-full">
+        <ProfileName name={profile.name}/>
+        <div className="flex items-center flex-wrap gap-3 justify-center">
+          {profile.bio!.split(',').map(tag => <BioTag key={tag}>{tag.trim()}</BioTag>)}
+        </div>
         {links.map((link) => <LinkButton key={link.id} data={link}/>)}
       </div>
     </>
