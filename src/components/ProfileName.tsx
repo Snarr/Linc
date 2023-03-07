@@ -1,5 +1,5 @@
-function ProfileName({name}: {name: string}) {
-  return (<div className="text-3xl text-white font-bold">
+function ProfileName({name}: {name: string | null}) {
+  return (<div className="text-3xl text-white text-center font-bold">
     {name}
   </div>)
 }
